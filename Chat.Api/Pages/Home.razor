@@ -1,0 +1,35 @@
+﻿@using Chat.Core
+@using Chat.Core.Repsitory.Groups
+@using Chat.Entities.Models.ChatItem
+@using Ninject
+@page "/"
+@page "/home"
+<body>
+<div class="vertical-menu">
+              @foreach(var group in groups)
+            {
+  <a href="@($"/groupChat/{group.Name}")">@group.Name</a>
+            }
+</div>
+<div class="menulast">
+    <a href="/createGroup">CreateGroup</a>
+</div>
+</body>
+@code {
+    public static int Iter = 0;
+    private readonly IGroupRepository _groupRepository;
+    string message;
+    public Home()
+    {
+        this._groupRepository = Bootstrapper.Kernel.Get<IGroupRepository>();
+    }
+
+    List<Group> groups = new List<Group>();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await base.OnInitializedAsync();
+
+        groups = _groupRepository.GetAllGroupByUser(Guid.Parse("D2E464F9-A4BF-4D21-FF4C-08DA7FEC4BE7")).ToList();
+    }
+}

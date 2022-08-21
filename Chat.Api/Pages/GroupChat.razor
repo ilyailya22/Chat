@@ -1,0 +1,119 @@
+﻿@page "/groupChat/{head}"
+@using Chat.Core
+@using Chat.Core.Repository.User
+@using Chat.Core.Repsitory.Groups
+@using Chat.Core.Repsitory.Messages
+@using Chat.Entities.Models.ChatItem
+@using Ninject
+
+<body>
+    <h3>Chat @Head</h3>
+    <div class="time">
+        <span>
+        @try
+        {
+            @messages[0].Date.ToShortDateString()
+        }
+        catch
+        {
+            @DateTime.Now
+        }
+        </span>
+    </div>
+
+    @foreach(var message in messages)
+    {
+        if(message.UserId==Guid.Parse("D2E464F9-A4BF-4D21-FF4C-08DA7FEC4BE7"))
+        {
+            <div class="message sag mtLine">
+                <div class="messageText" data-time=@message.Date.TimeOfDay>
+                    <label @onclick="() => ChangeText(message.Id)">@message.Text</label>
+                </div>
+                <div class="resim" style="background-image: url('https://fbcdn-sphotos-c-a.akamaihd.net/hphotos-ak-prn2/t1/1393075_669686723071617_1541630705_n.jpg');"></div>
+            </div>
+        }
+        else
+        {
+            <div class="message sol">
+                <div class="resim" style="background-image: url('https://fbcdn-sphotos-a-a.akamaihd.net/hphotos-ak-prn2/t1/1461137_576157439120105_582502926_n.jpg');"></div>
+                    <div class="messageText" data-time=@message.Date.TimeOfDay>
+                        @message.Text
+                    </div>
+            </div>
+        }
+    }
+
+    <div class="bg"></div>
+    <form>
+    <div class="center">
+            <input type="text" placeholder="Write Your Message... " @bind="@messageNew"/>
+    </div>
+
+    <div class="center">
+            <button class="button" @onclick="@PreviousIter">Previous</button>
+            <button class="button" @onclick="@WriteMessage">Write</button>
+            <button class="button" @onclick="@NextIter">Next</button>
+    </div>
+    <div class="center">
+        <input type="text" @bind="@message.Text"/>  
+    </div>
+    <div class="center">
+        <button class="button" @onclick="@EditOrDelete">EditOrDelete</button>
+    </div>
+</form>
+</body>
+
+
+@code {
+    [Parameter]
+    public string? Head { get; set; }
+    private readonly IMessageRepository _messageRepository;
+    private readonly IGroupRepository _groupRepository;
+    private readonly IUserRepository _userRepository;
+    string messageNew;
+    Message message = new Message();
+    public GroupChat()
+    {
+        this._messageRepository = Bootstrapper.Kernel.Get<IMessageRepository>();
+        this._groupRepository = Bootstrapper.Kernel.Get<IGroupRepository>();
+        this._userRepository = Bootstrapper.Kernel.Get<IUserRepository>();
+    }
+    List<Message> messages = new List<Message>();
+
+    protected override void OnInitialized()
+    {
+        messages = _messageRepository.Filter(_groupRepository.GetGroupByName(Head).Id,Home.Iter).ToList();
+    }
+
+    protected void WriteMessage()
+    {
+        _messageRepository.CreateMessage(messageNew,Guid.Parse("D2E464F9-A4BF-4D21-FF4C-08DA7FEC4BE7"), _groupRepository.GetGroupByName(Head).Id);
+    }
+
+    protected void NextIter()
+    {
+        Home.Iter++;
+    }
+
+    protected void PreviousIter()
+    {
+        Home.Iter--;
+    }
+
+    protected void ChangeText(Guid id)
+    {
+        message = _messageRepository.GetMessageById(id);
+    }
+
+    protected void EditOrDelete()
+    {
+        if(message.Text=="")
+        {
+            _messageRepository.DeleteMessage(message.Id);
+        }
+        else
+        {
+            _messageRepository.UpdateMessage(message);
+        }
+    }
+}

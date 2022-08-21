@@ -1,0 +1,60 @@
+﻿@page "/createGroup"
+@using Chat.Core
+@using Chat.Core.Repository.User
+@using Chat.Core.Repsitory.Groups
+@using Chat.Core.Repsitory.Messages
+@using Chat.Entities.Models.User
+@using Ninject
+<body>
+@foreach(var user in users)
+{
+    <button class="button" @onclick="() => AddUserInList(user)">@user.Login</button>
+}
+    <div class="center">
+        <input type="text" @bind="@namegroup"/>  
+    </div>
+     <div class="center">
+        <div class="center">
+            <button class="button" @onclick="@CreateUserGroup">Create</button>
+        </div>
+    </div>
+</body>
+@code {
+    private readonly IGroupRepository _groupRepository;
+    private readonly IUserRepository _userRepository;
+    string message;
+    public CreateGroup()
+    {
+        this._userRepository = Bootstrapper.Kernel.Get<IUserRepository>();
+        this._groupRepository = Bootstrapper.Kernel.Get<IGroupRepository>();
+        usersChoose.Add(_userRepository.GetUserById(Guid.Parse("D2E464F9-A4BF-4D21-FF4C-08DA7FEC4BE7")).Id);
+    }
+
+    List<UserInfo> users = new List<UserInfo>();
+
+    List<Guid> usersChoose = new List<Guid>();
+
+    protected override void OnInitialized()
+    {
+        users= _userRepository.GetAllUser().ToList();
+    }
+
+    protected void AddUserInList(UserInfo userInfo)
+    {
+        usersChoose.Add(userInfo.Id);
+        if(usersChoose.Count==2)
+        {
+            namegroup = userInfo.Login;
+        }
+        else
+        {
+            namegroup += " " + userInfo.Login;
+        }
+    }
+    string namegroup="";
+
+    protected void CreateUserGroup()
+    {
+        _groupRepository.CreateGroup(namegroup, usersChoose);
+    }
+}
